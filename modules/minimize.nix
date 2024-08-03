@@ -3,13 +3,9 @@
     "${modulesPath}/profiles/minimal.nix"
   ];
 
-  # switch-to-configuration-ng reimplements switch-to-configuration, but
-  # without perl.
-  system.switch = {
-    enable = false;
-    enableNg = true;
-  };
+  boot.loader.grub.enable = false;
 
+  system.switch.enable = false;
   nix.enable = false;
 
   system.etc.overlay.enable = true;
