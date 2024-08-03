@@ -10,6 +10,14 @@
       osVersion = 17;
     in
     {
+      packages.x86_64-linux =
+        let
+          config = self.nixosConfigurations.demo.config;
+        in
+        {
+          uki = config.system.build.uki;
+          partitions = config.system.build.image;
+        };
 
       nixosConfigurations.demo = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
