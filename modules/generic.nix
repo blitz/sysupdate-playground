@@ -1,7 +1,14 @@
-{ pkgs, ... }: {
+{ pkgs, lib, ... }: {
 
   boot.uki.name = "appliance";
   boot.kernelParams = [ "console=ttyS0" ];
+
+  # TODO Is there a way to override these?
+  #system.nixos.release = "2024-08";
+  #system.nixos.codeName = "Babylon";
+
+  system.nixos.distroId = "applianceos";
+  system.nixos.distroName = "ApplianceOS";
 
   # Not compatible with system.etc.overlay.enable yet.
   # users.mutableUsers = false;

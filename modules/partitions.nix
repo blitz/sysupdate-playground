@@ -20,6 +20,11 @@
 
             "/EFI/Linux/${config.system.boot.loader.ukiFile}".source =
               "${config.system.build.uki}/${config.system.boot.loader.ukiFile}";
+
+            # systemd-boot configuration
+            "/loader/loader.conf".source = (pkgs.writeText "$out" ''
+              timeout 3
+            '');
           };
           repartConfig = {
             Type = "esp";
