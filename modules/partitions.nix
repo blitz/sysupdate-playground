@@ -25,6 +25,29 @@
             "/loader/loader.conf".source = (pkgs.writeText "$out" ''
               timeout 3
             '');
+
+            # EFI shell for modifying EFI variables and running startup scripts
+            # Placed in a separate directory so it is not added to boot entries by default.
+            "/tools/shell.efi".source = pkgs.edk2-uefi-shell.efi;
+
+            # Factory Reset EFI shell script.
+            # This sets or unsets the factory reset EFI variable for the next boot.
+            # This variable is observed and reset by the systemd-repart.service
+            "/tools/factoryreset.nsh".source = (pkgs.writeText "$out" ''
+              setvar FactoryReset -guid 8cf2644b-4b0b-428f-9387-6d876050dc67 -nv -rt =%1
+
+              pause
+              reset
+            '');
+
+            # Factory Reset boot loader entry
+            "/loader/entries/factoryreset_enable.conf".source = (pkgs.writeText "$out" ''
+              title Enable Factory Reset
+
+              options -nostartup -nomap
+              options \tools\factoryreset.nsh L"t"
+              efi tools/shell.efi
+            '');
           };
           repartConfig = {
             Type = "esp";
@@ -81,5 +104,24 @@
           };
         };
       };
+    };
+
+    boot.initrd.systemd.repart = {
+      enable = true;
+      device = "/dev/sda";
+    };
+
+    systemd.repart = {
+      # Only run during boot before switching root, not again as system service.
+      # This should only take action for factory reset.
+      enable = false;
+      partitions = {
+        "var" = config.image.repart.partitions."var".repartConfig;
+      };
+    };
+
+    # Ensure all filesystem checks happen after the initrd reconfigured the drive.
+    boot.initrd.systemd.services."systemd-fsck@" = {
+      after = [ "systemd-repart.service" ];
     };
 }
