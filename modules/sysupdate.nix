@@ -1,16 +1,12 @@
 { config, ... }: {
-
   systemd.sysupdate = {
     enable = true;
 
     transfers = {
       "10-uki" = {
         Source = {
-          #"${config.boot.uki.name}_@v+@l-@d.efi"
-          #"${config.boot.uki.name}_@v+@l.efi"
-
           MatchPattern = [
-            "${config.boot.uki.name}_@v.efi"
+            "${config.boot.uki.name}_@v.efi.xz"
           ];
 
           # We could fetch updates from the network as well:
@@ -23,15 +19,12 @@
         Target = {
           InstancesMax = 2;
           MatchPattern = [
-            "${config.boot.uki.name}_@v+@l-@d.efi"
+            "${config.boot.uki.name}_@v.efi"
           ];
 
           Mode = "0444";
           Path = "/EFI/Linux";
           PathRelativeTo = "boot";
-
-          TriesDone = 0;
-          TriesLeft = 3;
 
           Type = "regular-file";
         };
@@ -43,7 +36,7 @@
       "20-store" = {
         Source = {
           MatchPattern = [
-            "store_@v.img"
+            "store_@v.img.xz"
           ];
           # Path = "https://download.example.com/";
           # Type = "url-file";
