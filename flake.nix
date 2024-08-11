@@ -1,5 +1,5 @@
 {
-  description = "A very basic flake";
+  description = "systemd-sysupdate / systemd-repart Example";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
@@ -7,6 +7,7 @@
 
   outputs = { self, nixpkgs }: {
     lib = {
+      # Prepare an update package for the system.
       mkUpdate = nixos:
         let
           config = nixos.config;
@@ -23,6 +24,7 @@
             > $out/store_${config.system.image.version}.img.xz
         '';
 
+      # Prepare a ready-to-boot disk image.
       mkInstallImage = nixos:
         let
           config = nixos.config;
@@ -39,9 +41,12 @@
 
 
     packages.x86_64-linux = {
-      appliance_17_update = self.lib.mkUpdate self.nixosConfigurations.appliance_17;
-      appliance_17_image = self.lib.mkInstallImage self.nixosConfigurations.appliance_17;
+      default = self.packages.x86_64-linux.appliance_17_image;
 
+      appliance_17_image = self.lib.mkInstallImage self.nixosConfigurations.appliance_17;
+      appliance_17_update = self.lib.mkUpdate self.nixosConfigurations.appliance_17;
+
+      appliance_18_image = self.lib.mkInstallImage self.nixosConfigurations.appliance_18;
       appliance_18_update = self.lib.mkUpdate self.nixosConfigurations.appliance_18;
     };
 
@@ -54,7 +59,8 @@
             ./version-17.nix
           ];
 
-          # Prepare an update.
+          # To avoid having to prepare an update server, we just drop
+          # an update into the filesystem.
           systemd.services.update-prepare-debug = {
             description = "Prepare a fake update";
             wantedBy = [ "multi-user.target" ];
@@ -62,7 +68,10 @@
             requires = [ "local-fs.target" ]; # Ensure file systems are mounted.
 
             script = ''
+              # We configured systemd-sysupdate to look for updates here.
               mkdir /var/updates
+
+              # We can't symlink the update package. systemd-sysupdate doesn't like that.
               cp ${self.packages.x86_64-linux.appliance_18_update}/* /var/updates
             '';
 
