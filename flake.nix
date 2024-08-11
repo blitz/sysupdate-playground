@@ -39,6 +39,15 @@
         '';
     };
 
+    devShells.x86_64-linux.default =
+      let
+        pkgs = nixpkgs.legacyPackages.x86_64-linux;
+      in
+        pkgs.mkShell {
+          packages = [
+            self.packages.x86_64-linux.qemu-efi
+          ];
+        };
 
     packages.x86_64-linux = {
       default = self.packages.x86_64-linux.appliance_17_image;
@@ -48,6 +57,24 @@
 
       appliance_18_image = self.lib.mkInstallImage self.nixosConfigurations.appliance_18;
       appliance_18_update = self.lib.mkUpdate self.nixosConfigurations.appliance_18;
+
+      # A helper script to run the disk images above.
+      qemu-efi = let
+        pkgs = nixpkgs.legacyPackages.x86_64-linux;
+      in
+        pkgs.writeShellApplication {
+          name = "qemu-efi";
+
+          runtimeInputs = [ pkgs.qemu_kvm ];
+
+          text = ''
+           qemu-system-x86_64 \
+             -smp 2 -m 2048 -machine q35,accel=kvm \
+             -bios ${pkgs.OVMF.fd}/FV/OVMF.fd \
+             -snapshot \
+             -serial stdio "$@"
+          '';
+        };
     };
 
     nixosConfigurations.appliance_17 = nixpkgs.lib.nixosSystem {

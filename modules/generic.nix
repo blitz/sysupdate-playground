@@ -10,6 +10,11 @@
   system.nixos.distroId = "applianceos";
   system.nixos.distroName = "ApplianceOS";
 
+  # Make the current system version visible in the prompt.
+  programs.bash.promptInit = ''
+    export PS1="\u@\h (version ${config.system.image.version}) $ "
+  '';
+
   # Not compatible with system.etc.overlay.enable yet.
   # users.mutableUsers = false;
 
