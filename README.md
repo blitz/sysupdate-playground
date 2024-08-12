@@ -10,10 +10,10 @@ See [x86.lol](https://x86.lol/) for more information. (Ooops, this post is not u
 
 You need [Nix](https://nixos.org/) with enabled
 [Flakes](https://wiki.nixos.org/wiki/Flakes). After that, you can
-build the
+build the disk image:
 
 ```console
-$ nix build .#appliance_17_image
+$ nix build .
 ```
 
 After the build process, there will be a QEMU disk image `disk.qcow2`
