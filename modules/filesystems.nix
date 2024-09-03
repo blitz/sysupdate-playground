@@ -1,7 +1,9 @@
 { config, ... }: {
 
   zramSwap = {
-    enable = true;
+    # TODO zram-generator fails to compile for ARM.
+    enable = false;
+
     algorithm = "zstd";
     memoryPercent = 20;
   };
