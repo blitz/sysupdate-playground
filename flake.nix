@@ -59,6 +59,10 @@
       appliance_18_update = self.lib.mkUpdate self.nixosConfigurations.appliance_18;
 
       # A helper script to run the disk images above.
+      #
+      # TODO To boot AArch64 images, we need to do more:
+      #
+      # https://ubuntu.com/server/docs/boot-arm64-virtual-machines-on-qemu
       qemu-efi = let
         pkgs = nixpkgs.legacyPackages.x86_64-linux;
       in
