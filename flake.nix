@@ -119,7 +119,7 @@
           let
             config = nixos.config;
           in
-          buildPkgs.runCommand "update-${config.system.image.version}"
+          buildPkgs.runCommand "image-${config.system.image.version}"
             {
               nativeBuildInputs = with buildPkgs; [ qemu ];
             } ''
