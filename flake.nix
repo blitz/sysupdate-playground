@@ -33,8 +33,12 @@
             appliance_17 = lib.nixosSystem {
               modules = [
                 ({ config, lib, pkgs, modulesPath, ... }: {
-                  nixpkgs.buildPlatform = buildSystem;
-                  nixpkgs.hostPlatform = system;
+                  # We could also use these to trigger
+                  # cross-compilation, but we already have the
+                  # ready-to-go crossPkgs.
+                  #
+                  #nixpkgs.buildPlatform = buildSystem;
+                  #nixpkgs.hostPlatform = system;
                   nixpkgs.pkgs = crossPkgs;
 
                   imports = [
@@ -71,8 +75,6 @@
             appliance_18 = lib.nixosSystem {
               modules = [
                 ({ config, lib, pkgs, modulesPath, ... }: {
-                  nixpkgs.buildPlatform = buildSystem;
-                  nixpkgs.hostPlatform = system;
                   nixpkgs.pkgs = crossPkgs;
 
                   imports = [
