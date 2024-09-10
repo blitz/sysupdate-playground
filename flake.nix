@@ -10,30 +10,32 @@
     flake-utils.inputs.systems.follows = "systems";
   };
 
-  outputs = { self, nixpkgs, systems, flake-utils }:
+  outputs = { self, nixpkgs, flake-utils, ... }:
     let
+      inherit (nixpkgs) lib;
+
       buildSystem = "x86_64-linux";
       buildPkgs = nixpkgs.legacyPackages."${buildSystem}";
     in
     (flake-utils.lib.eachDefaultSystem (system:
       let
+        isBuildSystem = system == buildSystem;
         pkgs = nixpkgs.legacyPackages."${system}";
+        crossPkgs =
+          if isBuildSystem
+          then nixpkgs.legacyPackages."${system}"
+          else import "${nixpkgs}" { localSystem = buildSystem; crossSystem = system; };
       in
+      (lib.optionalAttrs isBuildSystem (import ./buildHost.nix { inherit pkgs; })) //
       {
-        devShells.default =
-          pkgs.mkShell {
-            packages = [
-              self.packages."${system}".qemu-efi
-            ];
-          };
-
         packages =
           let
-            appliance_17 = nixpkgs.lib.nixosSystem {
+            appliance_17 = lib.nixosSystem {
               modules = [
                 ({ config, lib, pkgs, modulesPath, ... }: {
                   nixpkgs.buildPlatform = buildSystem;
                   nixpkgs.hostPlatform = system;
+                  nixpkgs.pkgs = crossPkgs;
 
                   imports = [
                     ./base.nix
@@ -66,11 +68,12 @@
               ];
             };
 
-            appliance_18 = nixpkgs.lib.nixosSystem {
+            appliance_18 = lib.nixosSystem {
               modules = [
                 ({ config, lib, pkgs, modulesPath, ... }: {
                   nixpkgs.buildPlatform = buildSystem;
                   nixpkgs.hostPlatform = system;
+                  nixpkgs.pkgs = crossPkgs;
 
                   imports = [
                     ./base.nix
@@ -90,26 +93,6 @@
 
             appliance_18_image = self.lib.mkInstallImage appliance_18;
             appliance_18_update = self.lib.mkUpdate appliance_18;
-
-            # A helper script to run the disk images above.
-            #
-            # TODO To boot AArch64 images, we need to do more:
-            #
-            # https://ubuntu.com/server/docs/boot-arm64-virtual-machines-on-qemu
-            qemu-efi =
-              pkgs.writeShellApplication {
-                name = "qemu-efi";
-
-                runtimeInputs = [ pkgs.qemu_kvm ];
-
-                text = ''
-                  qemu-system-x86_64 \
-                    -smp 2 -m 2048 -machine q35,accel=kvm \
-                    -bios ${pkgs.OVMF.fd}/FV/OVMF.fd \
-                    -snapshot \
-                    -serial stdio "$@"
-                '';
-              };
           };
       })) // {
       lib = {
