@@ -3,11 +3,7 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
-
-    systems.url = "github:nix-systems/default-linux";
-
     flake-utils.url = "github:numtide/flake-utils";
-    flake-utils.inputs.systems.follows = "systems";
   };
 
   outputs = { self, nixpkgs, flake-utils, ... }:
@@ -17,7 +13,7 @@
       buildSystem = "x86_64-linux";
       buildPkgs = nixpkgs.legacyPackages."${buildSystem}";
     in
-    (flake-utils.lib.eachDefaultSystem (system:
+    (flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" "riscv64-linux" ] (system:
       let
         isBuildSystem = system == buildSystem;
         pkgs = nixpkgs.legacyPackages."${system}";
