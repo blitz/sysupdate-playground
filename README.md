@@ -28,7 +28,7 @@ enter a development shell and boot it with the convenience script
 
 ```console
 $ nix develop
-$ qemu-efi -hda result/disk.qcow2
+$ qemu-efi x86_64 result/disk.qcow2
 ```
 
 ## Experimenting with the Demo
