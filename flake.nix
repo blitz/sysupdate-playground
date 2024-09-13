@@ -25,67 +25,68 @@
           if isBuildSystem
           then nixpkgs.legacyPackages."${system}"
           else import "${nixpkgs}" { localSystem = buildSystem; crossSystem = system; };
+
+        # A convenience wrapper around lib.nixosSystem that configures
+        # cross-compilation.
+        crossNixos = module: lib.nixosSystem {
+          modules = [
+            module
+
+            {
+              # We could also use these to trigger cross-compilation,
+              # but we already have the ready-to-go crossPkgs.
+              #
+              # nixpkgs.buildPlatform = buildSystem;
+              # nixpkgs.hostPlatform = system;
+              nixpkgs.pkgs = crossPkgs;
+            }
+          ];
+        };
       in
-      (lib.optionalAttrs isBuildSystem (import ./buildHost.nix { inherit pkgs; })) //
+      # Some outputs only make sense for the build system, e.g. the development shell.
+      (lib.optionalAttrs isBuildSystem (import ./buildHost.nix { inherit pkgs; }))
+      //
       {
         packages =
           let
-            appliance_17 = lib.nixosSystem {
-              modules = [
-                ({ config, lib, pkgs, modulesPath, ... }: {
-                  # We could also use these to trigger
-                  # cross-compilation, but we already have the
-                  # ready-to-go crossPkgs.
-                  #
-                  #nixpkgs.buildPlatform = buildSystem;
-                  #nixpkgs.hostPlatform = system;
-                  nixpkgs.pkgs = crossPkgs;
-
-                  imports = [
-                    ./base.nix
-                    ./version-17.nix
-                  ];
-
-                  # To avoid having to prepare an update server, we just drop
-                  # an update into the filesystem.
-                  systemd.services.update-prepare-debug = {
-                    description = "Prepare a fake update";
-                    wantedBy = [ "multi-user.target" ];
-                    after = [ "local-fs.target" ]; # Ensures the script runs after file systems are mounted.
-                    requires = [ "local-fs.target" ]; # Ensure file systems are mounted.
-
-                    script = ''
-                      # We configured systemd-sysupdate to look for updates here.
-                      mkdir /var/updates
-
-                      # We can't symlink the update package. systemd-sysupdate doesn't like that.
-                      cp ${self.packages."${system}".appliance_18_update}/* /var/updates
-                    '';
-
-                    serviceConfig = {
-                      Type = "oneshot"; # Ensures the service runs once and then exits.
-                    };
-                  };
-
-                  system.image.version = "17";
-                })
+            appliance_17 = crossNixos ({ config, lib, pkgs, modulesPath, ... }: {
+              imports = [
+                ./base.nix
+                ./version-17.nix
               ];
-            };
 
-            appliance_18 = lib.nixosSystem {
-              modules = [
-                ({ config, lib, pkgs, modulesPath, ... }: {
-                  nixpkgs.pkgs = crossPkgs;
+              # To avoid having to prepare an update server, we just drop
+              # an update into the filesystem.
+              systemd.services.update-prepare-debug = {
+                description = "Prepare a fake update";
+                wantedBy = [ "multi-user.target" ];
+                after = [ "local-fs.target" ]; # Ensures the script runs after file systems are mounted.
+                requires = [ "local-fs.target" ]; # Ensure file systems are mounted.
 
-                  imports = [
-                    ./base.nix
-                    ./version-18.nix
-                  ];
+                script = ''
+                  # We configured systemd-sysupdate to look for updates here.
+                  mkdir /var/updates
 
-                  system.image.version = "18";
-                })
+                  # We can't symlink the update package. systemd-sysupdate doesn't like that.
+                  cp ${self.packages."${system}".appliance_18_update}/* /var/updates
+                '';
+
+                serviceConfig = {
+                  Type = "oneshot"; # Ensures the service runs once and then exits.
+                };
+              };
+
+              system.image.version = "17";
+            });
+
+            appliance_18 = crossNixos ({ config, lib, pkgs, modulesPath, ... }: {
+              imports = [
+                ./base.nix
+                ./version-18.nix
               ];
-            };
+
+              system.image.version = "18";
+            });
           in
           {
             default = self.packages."${system}".appliance_17_image;
