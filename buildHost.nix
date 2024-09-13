@@ -48,6 +48,34 @@ let
                                   -device virtio-blk-device,drive=hd -device VGA \
                                   "$@"
               ;;
+           riscv64)
+              if [ ! -f .riscv-efi.img ]; then
+                cat "${pkgs.pkgsCross.riscv64.OVMF.fd}/FV/RISCV_VIRT_CODE.fd" > .riscv-efi.img
+                truncate -s 32m .riscv-efi.img
+              fi
+
+              if [ ! -f .riscv-var.img ]; then
+                cat "${pkgs.pkgsCross.riscv64.OVMF.fd}/FV/RISCV_VIRT_VARS.fd" > .riscv-var.img
+                truncate -s 32m .riscv-var.img
+              fi
+
+              # See https://github.com/tianocore/edk2/blob/master/OvmfPkg/RiscVVirt/README.md
+              qemu-system-riscv64 \
+                -M virt,pflash0=pflash0,pflash1=pflash1,acpi=off \
+                -m 4096 -smp 2 \
+                -serial stdio \
+                -device virtio-gpu-pci \
+                -device qemu-xhci \
+                -device usb-kbd \
+                -device virtio-rng-pci \
+                -blockdev node-name=pflash0,driver=file,read-only=on,filename=.riscv-efi.img \
+                -blockdev node-name=pflash1,driver=file,filename=.riscv-var.img \
+                -netdev user,id=net0 \
+                -device virtio-net-pci,netdev=net0 \
+                -device virtio-blk-device,drive=hd0 \
+                -drive if=none,file="$DISK",id=hd0,snapshot=on \
+                "$@"
+              ;;
            *)
               echo "Unknown architecture: $ARCH" >&2
               exit 1
