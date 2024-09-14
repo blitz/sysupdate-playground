@@ -1,4 +1,4 @@
-{ config, ... }: {
+{ config, pkgs, ... }: {
   systemd.sysupdate = {
     enable = true;
 
@@ -47,10 +47,16 @@
         Target = {
           InstancesMax = 2;
 
-          # This doesn't work, because / is a tmpfs and the heuristic is not that smart.
+          # "auto" doesn't work, because / is a tmpfs and the
+          # heuristic is not that smart. So we hardcode the device
+          # here for the different platforms.
           #
           # Path = "auto";
-          Path = "/dev/sda";
+          Path = {
+            x86_64-linux = "/dev/sda";
+            aarch64-linux = "/dev/vda";
+            riscv64-linux = "/dev/vda";
+          }."${pkgs.stdenv.system}";
 
           MatchPattern = "store_@v";
 
