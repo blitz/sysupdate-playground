@@ -1,10 +1,16 @@
 # systemd-repart / systemd-sysupdate Example
 
-This repository contains an example of how to use [systemd-repart]()
-and [systemd-sysupdate]() to build immutable system images that can be
-updated over the Internet.
+This repository contains an example of how to use
+[systemd-repart](https://www.freedesktop.org/software/systemd/man/latest/systemd-repart.html#)
+and
+[systemd-sysupdate](https://www.freedesktop.org/software/systemd/man/latest/systemd-sysupdate.html)
+to build immutable system images that can be updated over the
+Internet.
 
-See [x86.lol](https://x86.lol/) for more information. (Ooops, this post is not up yet!)
+See [x86.lol](https://x86.lol/) for blog posts about this setup:
+
+1. [Immutable Systems: NixOS + systemd-repart + systemd-sysupdate](https://x86.lol/generic/2024/08/28/systemd-sysupdate.html)
+1. Immutable Systems: Cross-Compiling for RISC-V using Flakes (to be published)
 
 ## How to Build the System Image
 
@@ -27,7 +33,10 @@ enter a development shell and boot it with the convenience script
 `qemu-efi`:
 
 ```console
+# This will take some time, because it compiles quite a bunch of stuff for
+# RISC-V and ARM AArch64.
 $ nix develop
+
 $ qemu-efi x86_64 result/disk.qcow2
 ```
 
