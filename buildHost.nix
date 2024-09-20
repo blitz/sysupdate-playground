@@ -1,10 +1,6 @@
 { pkgs }:
 let
   # A helper script to run the disk images above.
-  #
-  # TODO To boot AArch64 images, we need to do more:
-  #
-  # https://ubuntu.com/server/docs/boot-arm64-virtual-machines-on-qemu
   qemu-efi = pkgs.writeShellApplication {
     name = "qemu-efi";
 
@@ -40,6 +36,7 @@ let
                 truncate -s 64m .aarch-var.img
               fi
 
+              # See  https://ubuntu.com/server/docs/boot-arm64-virtual-machines-on-qemu
               qemu-system-aarch64 -machine virt -smp 2 -m 2048 -cpu max \
                                   -serial stdio \
                                   -drive if=pflash,format=raw,file=.aarch-efi.img,readonly=on \
