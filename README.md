@@ -10,7 +10,7 @@ Internet.
 See [x86.lol](https://x86.lol/) for blog posts about this setup:
 
 1. [Immutable Systems: NixOS + systemd-repart + systemd-sysupdate](https://x86.lol/generic/2024/08/28/systemd-sysupdate.html)
-1. Immutable Systems: Cross-Compiling for RISC-V using Flakes (to be published)
+1. [Immutable Systems: Cross-Compiling for RISC-V using Flakes](https://x86.lol/generic/2024/09/21/cross-compile-riscv.html)
 
 ## How to Build the System Image
 
