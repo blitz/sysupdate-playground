@@ -10,17 +10,20 @@
     let
       inherit (nixpkgs) lib;
 
-      buildSystem = "x86_64-linux";
-      buildPkgs = nixpkgs.legacyPackages."${buildSystem}";
+      # The platform we want to build on. This should ideally be configurable.
+      buildPlatform = "x86_64-linux";
+
+      # We use this to build derivations for the build platform.
+      buildPkgs = nixpkgs.legacyPackages."${buildPlatform}";
     in
     (flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" "riscv64-linux" ] (system:
       let
-        isBuildSystem = system == buildSystem;
-        pkgs = nixpkgs.legacyPackages."${system}";
-        crossPkgs =
-          if isBuildSystem
-          then nixpkgs.legacyPackages."${system}"
-          else import "${nixpkgs}" { localSystem = buildSystem; crossSystem = system; };
+        # We use this later to add some extra outputs for the build system.
+        isBuildPlatform = system == buildPlatform;
+
+        # We treat everything as cross-compilation without a special
+        # case for isBuildSystem. Nixpkgs will do the right thing.
+        crossPkgs = import nixpkgs { localSystem = buildPlatform; crossSystem = system; };
 
         # A convenience wrapper around lib.nixosSystem that configures
         # cross-compilation.
@@ -40,12 +43,12 @@
         };
       in
       # Some outputs only make sense for the build system, e.g. the development shell.
-      (lib.optionalAttrs isBuildSystem (import ./buildHost.nix { inherit pkgs; }))
+      (lib.optionalAttrs isBuildPlatform (import ./buildHost.nix { pkgs = buildPkgs; }))
       //
       {
         packages =
           let
-            appliance_17 = crossNixos ({ config, lib, pkgs, modulesPath, ... }: {
+            appliance_17 = crossNixos {
               imports = [
                 ./base.nix
                 ./version-17.nix
@@ -73,16 +76,16 @@
               };
 
               system.image.version = "17";
-            });
+            };
 
-            appliance_18 = crossNixos ({ config, lib, pkgs, modulesPath, ... }: {
+            appliance_18 = crossNixos {
               imports = [
                 ./base.nix
                 ./version-18.nix
               ];
 
               system.image.version = "18";
-            });
+            };
           in
           {
             default = self.packages."${system}".appliance_17_image;
