@@ -110,7 +110,7 @@
             mkdir -p $out
             xz -1 -cz ${config.system.build.uki}/${config.system.boot.loader.ukiFile} \
               > $out/${config.system.boot.loader.ukiFile}.xz
-            xz -1 -cz ${config.system.build.image}/${config.boot.uki.name}_${config.system.image.version}.store.raw \
+            xz -1 -cz ${config.system.build.finalImage}/${config.boot.uki.name}_${config.system.image.version}.store.raw \
               > $out/store_${config.system.image.version}.img.xz
           '';
 
@@ -125,7 +125,7 @@
             } ''
             mkdir -p $out
             qemu-img convert -f raw -O qcow2 \
-              -C ${config.system.build.image}/${config.boot.uki.name}_${config.system.image.version}.raw \
+              -C ${config.system.build.finalImage}/${config.boot.uki.name}_${config.system.image.version}.raw \
               $out/disk.qcow2
           '';
       };

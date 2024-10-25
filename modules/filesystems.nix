@@ -27,20 +27,24 @@
 
     "/boot" =
       let
-        partConf = config.image.repart.partitions."esp".repartConfig;
+        partConf = config.image.repart.partitions."10-esp".repartConfig;
       in
       {
         device = "/dev/disk/by-partuuid/${partConf.UUID}";
         fsType = partConf.Format;
       };
 
+    "/usr" = {
+      device = "/dev/mapper/usr";
+      # explicitly mount it read-only otherwise systemd-remount-fs will fail
+      options = [ "ro" ];
+      fsType = config.image.repart.partitions."20-store".repartConfig.Format;
+    };
+
     "/nix/store" =
-      let
-        partConf = config.image.repart.partitions."store".repartConfig;
-      in
       {
-        device = "/dev/disk/by-partlabel/${partConf.Label}";
-        fsType = partConf.Format;
+        device = "/usr/nix/store";
+        options = [ "bind" ];
       };
   };
 }

@@ -7,19 +7,35 @@
   image.repart =
     let
       efiArch = pkgs.stdenv.hostPlatform.efiArch;
+
+      espId = "10-esp";
+      storeId = "20-store";
+      storeVerityId = "30-store-verity";
     in
     {
       name = config.boot.uki.name;
       split = true;
 
+      verityStore = {
+        enable = true;
+        partitionIds = {
+          esp = espId;
+          store = storeId;
+          store-verity = storeVerityId;
+        };
+      };
+      
+
       partitions = {
-        "esp" = {
+        "${espId}" = {
           contents = {
             "/EFI/BOOT/BOOT${lib.toUpper efiArch}.EFI".source =
               "${pkgs.systemd}/lib/systemd/boot/efi/systemd-boot${efiArch}.efi";
 
-            "/EFI/Linux/${config.system.boot.loader.ukiFile}".source =
-              "${config.system.build.uki}/${config.system.boot.loader.ukiFile}";
+            # The verity module takes care of this.
+            #
+            # "/EFI/Linux/${config.system.boot.loader.ukiFile}".source =
+            #   "${config.system.build.uki}/${config.system.boot.loader.ukiFile}";
 
             # systemd-boot configuration
             "/loader/loader.conf".source = (pkgs.writeText "$out" ''
@@ -34,12 +50,13 @@
             SplitName = "-";
           };
         };
-        "store" = {
+        "${storeId}" = {
           storePaths = [ config.system.build.toplevel ];
-          stripNixStorePrefix = true;
+          #stripNixStorePrefix = true;
           repartConfig = {
-            Type = "linux-generic";
+            # Type = "linux-generic";
             Label = "store_${config.system.image.version}";
+            VerityMatchKey = "store_${config.system.image.version}";
             Format = "squashfs";
             Minimize = "off";
             ReadOnly = "yes";
@@ -47,6 +64,18 @@
             SizeMinBytes = "1G";
             SizeMaxBytes = "1G";
             SplitName = "store";
+          };
+        };
+        "${storeVerityId}" = {
+          repartConfig = {
+            Labe = "store_verity_${config.system.image.version}";
+            VerityMatchKey = "store_${config.system.image.version}";
+            Minimize = "off";
+            ReadOnly = "yes";
+
+            SizeMinBytes = "50M";
+            SizeMaxBytes = "50M";
+            SplitName = "store_verity";
           };
         };
 
@@ -58,6 +87,18 @@
             Minimize = "off";
             SizeMinBytes = "1G";
             SizeMaxBytes = "1G";
+            SplitName = "-";
+          };
+        };
+
+        # Placeholder for the second installed Nix store.
+        "store-verity-empty" = {
+          repartConfig = {
+            Type = "linux-generic";
+            Label = "_empty";
+            Minimize = "off";
+            SizeMinBytes = "50M";
+            SizeMaxBytes = "50M";
             SplitName = "-";
           };
         };
