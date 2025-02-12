@@ -63,6 +63,10 @@
           Type = "partition";
           ReadOnly = "yes";
         };
+
+        Transfer = {
+          ProtectVersion = "%A";
+        };
       };
     };
   };
