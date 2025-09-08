@@ -12,6 +12,11 @@ See [x86.lol](https://x86.lol/) for blog posts about this setup:
 1. [Immutable Systems: NixOS + systemd-repart + systemd-sysupdate](https://x86.lol/generic/2024/08/28/systemd-sysupdate.html)
 1. [Immutable Systems: Cross-Compiling for RISC-V using Flakes](https://x86.lol/generic/2024/09/21/cross-compile-riscv.html)
 
+For a more recent implementation exploring the same problem space,
+also check out the this [NixOS appliance images
+demo](https://github.com/applicative-systems/nixos-appliance-ota-update)
+by Applicative Systems.
+
 ## How to Build the System Image
 
 You need [Nix](https://nixos.org/) with enabled
